@@ -1,4 +1,4 @@
-# Reputation impacted by both playing and punishing. Play actions also depend on reputation (play state).
+# Reputation impacted by punishing behaviour only. Play actions also depend on reputation (play state).
 
 from Agents.ModelParameters import ModelParameters
 from typing import List, Any
@@ -11,61 +11,13 @@ from Agents.PunishSelectAgent import PunishSelectAgent
 from MatrixGame.MatrixGame import MatrixGame
 from MatrixGame.IPDGame import cooperation_game
 from Mechanisms.PartnerSelection import select_partners
-from Mechanisms.Punishment import select_punishers
-
-punishment_victim_penalty = -3
-
-just_punish_reward = 2
-no_punish_reward = 0
-unjust_punish_reward = -10
-
-cooperation_reputation = 1
-defection_reputation = -1
-just_punish_reputation = 2
-unjust_punish_reputation = -3
-no_punish_reputation = 0
+from Mechanisms.Punishment import select_punishers, perform_punishment
+from Mechanisms.Reputation import update_reputation_using_punish_action
+from Mechanisms.GamePlay import choose_play_actions
 
 
-def choose_play_actions(agent_1, agent_2, play_state_1, play_state_2, dilemma):
-    play_action_idx_1 = agent_1.play_model.select_action(play_state_1)
-    play_action_idx_2 = agent_2.play_model.select_action(play_state_2)
-    play_reward_1 = dilemma.payoffs["row"][play_action_idx_1, play_action_idx_2]
-    play_reward_2 = dilemma.payoffs["col"][play_action_idx_1, play_action_idx_2]
-    return play_action_idx_1, play_action_idx_2, play_reward_1, play_reward_2
-
-
-def update_reputation_using_play_action(action_idx, agent_idx, agent_reputations):
-    play_dict = {0: "C", 1: "D"}
-    if play_dict[action_idx] == "C":
-        agent_reputations[agent_idx] += cooperation_reputation
-    else:
-        agent_reputations[agent_idx] += defection_reputation
-
-
-def perform_punishment(punish_action_idx, victim_action_idx, punisher_idx, current_victim_reward, agent_reputations,
-                       agent_stats, logging, episode):
-    punishment_dict = {0: "NP", 1: "P"}
-    play_dict = {0: "C", 1: "D"}
-    punish_reward = 0
-    if punishment_dict[punish_action_idx] == "P":
-        current_victim_reward += punishment_victim_penalty
-        if play_dict[victim_action_idx]  == "C":
-            agent_reputations[punisher_idx] += unjust_punish_reputation
-            punish_reward += unjust_punish_reward
-            if logging:
-                agent_stats[punisher_idx]["punish_unjustly"][episode] += 1
-        else:
-            agent_reputations[punisher_idx] += just_punish_reputation
-            punish_reward += just_punish_reward
-            if logging:
-                agent_stats[punisher_idx]["punish_justly"][episode] += 1
-    else:
-        agent_reputations[punisher_idx] += no_punish_reputation
-    return punish_reward, current_victim_reward, agent_stats
-
-
-def play_ttp_s_play_punish_rep_rep_in_play_state(cooperation_dilemma: MatrixGame, num_eps: int, num_rounds: int,
-                                                 population: List[PunishSelectAgent], logging: bool = True):
+def play_ttp_s_play_punish_only_rep_rep_in_play_state(cooperation_dilemma: MatrixGame, num_eps: int, num_rounds: int,
+                                                      population: List[PunishSelectAgent], logging: bool = True):
     agent_reputations: List[int] = [0 for _ in population]
     agent_prev_play_actions: List[int] = [2 for _ in population]  # 2 is the UNKNOWN (starting) action.
     combined_sum_rewards_per_ep = []
@@ -114,16 +66,13 @@ def play_ttp_s_play_punish_rep_rep_in_play_state(cooperation_dilemma: MatrixGame
                                 agent_reputations[agent_1_idx], agent_reputations[agent_2_idx]]
 
                 play_action_idx_1, play_action_idx_2, play_reward_1, play_reward_2 = choose_play_actions(agent_1,
-                                                                                                        agent_2,
-                                                                                                        play_state_1,
-                                                                                                        play_state_2,
-                                                                                                        cooperation_dilemma)
+                                                                                                         agent_2,
+                                                                                                         play_state_1,
+                                                                                                         play_state_2,
+                                                                                                         cooperation_dilemma)
 
                 agent_prev_play_actions[agent_1_idx] = play_action_idx_1
                 agent_prev_play_actions[agent_2_idx] = play_action_idx_2
-
-                update_reputation_using_play_action(play_action_idx_1, agent_1_idx, agent_reputations)
-                update_reputation_using_play_action(play_action_idx_2, agent_2_idx, agent_reputations)
 
                 punisher_1_idx, punisher_1, punisher_2_idx, punisher_2 = select_punishers(population,
                                                                                           {agent_1_idx, agent_2_idx})
@@ -139,17 +88,22 @@ def play_ttp_s_play_punish_rep_rep_in_play_state(cooperation_dilemma: MatrixGame
                                                                                  agent_reputations, agent_stats,
                                                                                  logging, episode)
 
+                update_reputation_using_punish_action(punish_action_idx_1, play_action_idx_1, punisher_1_idx,
+                                                      agent_reputations)
 
                 punish_reward_2, play_reward_2, agent_stats = perform_punishment(punish_action_idx_2, play_action_idx_2,
                                                                                  punisher_2_idx, play_reward_2,
                                                                                  agent_reputations, agent_stats,
                                                                                  logging, episode)
 
+                update_reputation_using_punish_action(punish_action_idx_2, play_action_idx_2, punisher_2_idx,
+                                                      agent_reputations)
+
 
                 # Only agent 1 performs partner selection.
                 new_select_state_1 = agent_reputations.copy()
                 select_exp_1 = (
-                select_state, possible_partner_idx, play_reward_1, new_select_state_1, is_terminal_round)
+                    select_state, possible_partner_idx, play_reward_1, new_select_state_1, is_terminal_round)
                 agent_1.select_model.replay_buffer.store(*select_exp_1)
                 agent_1.select_model.optimise_model()
 
@@ -196,7 +150,7 @@ def play_ttp_s_play_punish_rep_rep_in_play_state(cooperation_dilemma: MatrixGame
         combined_sum_rewards_per_ep.append(combined_sum_reward)
     mean_combined_sum_reward = np.mean(combined_sum_rewards_per_ep)
     if logging:
-        with open("play_ttp_s_play_punish_rep_rep_in_play_state.json", 'w+', encoding='utf-8') as f:
+        with open("Logs/play_ttp_s_play_punish_rep_rep_in_play_state.json", 'w+', encoding='utf-8') as f:
             json.dump(agent_stats, f, ensure_ascii=False, indent=4)
 
     return mean_combined_sum_reward, agent_stats
