@@ -157,7 +157,7 @@ def play_tpp_select_play_punish_rep_rep_in_play_state_pd_caveman(cooperation_dil
         combined_sum_rewards_per_ep.append(combined_sum_reward)
     mean_combined_sum_reward = np.mean(combined_sum_rewards_per_ep)
     if logging:
-        with open("Simulations/TPP_S/IPD/Logs/play_tpp_select_play_punish_rep_rep_in_play_state_pd_caveman.json", 'w+',
+        with open("Simulations/NetworkStructure/IPD/Logs/play_tpp_select_play_punish_rep_rep_in_play_state_pd_caveman.json", 'w+',
                   encoding='utf-8') as f:
             json.dump(agent_stats, f, ensure_ascii=False, indent=4)
 
