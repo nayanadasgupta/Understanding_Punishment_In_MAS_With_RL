@@ -150,7 +150,7 @@ def play_ttp_s_play_punish_only_rep_rep_in_play_state(cooperation_dilemma: Matri
         combined_sum_rewards_per_ep.append(combined_sum_reward)
     mean_combined_sum_reward = np.mean(combined_sum_rewards_per_ep)
     if logging:
-        with open("Logs/play_ttp_s_play_punish_rep_rep_in_play_state.json", 'w+', encoding='utf-8') as f:
+        with open("Simulations/TPP_S/IPD/Logs/play_ttp_s_play_punish_rep_rep_in_play_state.json", 'w+', encoding='utf-8') as f:
             json.dump(agent_stats, f, ensure_ascii=False, indent=4)
 
     return mean_combined_sum_reward, agent_stats
@@ -201,8 +201,8 @@ if __name__ == "__main__":
                                     punish_stage_model_parameters) for _ in range(NUM_AGENTS)]
 
     start = time.perf_counter()
-    mean_combined_sum_reward, agent_stats = play_ttp_s_play_punish_rep_rep_in_play_state(cooperation_game, 1000, 10,
-                                                                                         population)
+    mean_combined_sum_reward, agent_stats = play_ttp_s_play_punish_only_rep_rep_in_play_state(cooperation_game, 1000, 10,
+                                                                                               population)
     print("Combined Mean Sum Reward", mean_combined_sum_reward)
     end = time.perf_counter()
 

@@ -153,7 +153,7 @@ def play_ttp_s_play_punish_rep_rep_in_punish_state(cooperation_dilemma: MatrixGa
         combined_sum_rewards_per_ep.append(combined_sum_reward)
     mean_combined_sum_reward = np.mean(combined_sum_rewards_per_ep)
     if logging:
-        with open("Logs/play_ttp_s_play_punish_rep_rep_in_punish_state.json", 'w+', encoding='utf-8') as f:
+        with open("Simulations/TPP_S/IPD/Logs/play_ttp_s_play_punish_rep_rep_in_punish_state.json", 'w+', encoding='utf-8') as f:
             json.dump(agent_stats, f, ensure_ascii=False, indent=4)
 
     return mean_combined_sum_reward, agent_stats

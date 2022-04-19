@@ -1,6 +1,7 @@
 from typing import List, Set
 import random
 from Agents.PunishSelectAgent import PunishSelectAgent
+import networkx as nx
 
 punishment_victim_penalty = -3
 
@@ -11,6 +12,17 @@ unjust_punish_reward = -10
 def select_punishers(population: List[PunishSelectAgent], play_agent_idxs: Set[int]):
     possible_punishers = [(punisher_idx, punisher) for punisher_idx, punisher in enumerate(population)
                           if punisher_idx not in play_agent_idxs]
+    # The punisher for the two agents can be the same or different.
+    punisher_1_idx, punisher_1 = random.choice(possible_punishers)
+    punisher_2_idx, punisher_2 = random.choice(possible_punishers)
+    return punisher_1_idx, punisher_1, punisher_2_idx, punisher_2
+
+
+def select_punishers_caveman(G: nx.Graph, population: List[PunishSelectAgent], play_agent_idxs: List[int]):
+    neighbour_union = set(G.neighbors(play_agent_idxs[0])).union(set(G.neighbors(play_agent_idxs[1])))
+    # Punishers must be a neighbour of either of the playing agents and cannot be the playing agents themselves.
+    possible_punishers = [(punisher_idx, population[punisher_idx]) for punisher_idx in neighbour_union
+                          if punisher_idx not in set(play_agent_idxs)]
     # The punisher for the two agents can be the same or different.
     punisher_1_idx, punisher_1 = random.choice(possible_punishers)
     punisher_2_idx, punisher_2 = random.choice(possible_punishers)
