@@ -1,3 +1,5 @@
+import os
+
 from tqdm import tqdm
 import json
 
@@ -65,6 +67,5 @@ if __name__ == "__main__":
         print()
         run_stats.append(agent_stats)
         run_mean_combined_reward.append(mean_combined_sum_reward)
-    with open(f"Simulations/TPP_S/IPD/Results/run_stats_{game_name}_{NUM_RUNS}_{NUM_EPISODES}_{NUM_ROUNDS}_{NUM_AGENTS}_agents.txt",
-              'w') as f:
+    with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Results', f'run_stats_{game_name}_{NUM_RUNS}_{NUM_EPISODES}_{NUM_ROUNDS}_{NUM_AGENTS}_agents.txt'), 'w') as f:
         json.dump(run_stats, f)

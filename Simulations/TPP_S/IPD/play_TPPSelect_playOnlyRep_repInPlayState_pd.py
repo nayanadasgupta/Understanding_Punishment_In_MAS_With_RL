@@ -1,4 +1,5 @@
 # Reputation impacted by both playing behaviour only. Play actions also depend on reputation (play state).
+import os
 
 from Agents.ModelParameters import ModelParameters
 from typing import List, Any
@@ -147,9 +148,8 @@ def play_ttp_s_play_only_rep_rep_in_play_state(cooperation_dilemma: MatrixGame, 
         combined_sum_rewards_per_ep.append(combined_sum_reward)
     mean_combined_sum_reward = np.mean(combined_sum_rewards_per_ep)
     if logging:
-        with open("Simulations/TPP_S/IPD/Logs/play_ttp_s_play_only_rep_rep_in_play_state.json", 'w+', encoding='utf-8') as f:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Logs', 'play_ttp_s_play_only_rep_rep_in_play_state.json'), 'w+', encoding='utf-8') as f:
             json.dump(agent_stats, f, ensure_ascii=False, indent=4)
-
     return mean_combined_sum_reward, agent_stats
 
 
@@ -198,7 +198,7 @@ if __name__ == "__main__":
                                     punish_stage_model_parameters) for _ in range(NUM_AGENTS)]
 
     start = time.perf_counter()
-    mean_combined_sum_reward, agent_stats = play_ttp_s_play_only_rep_rep_in_play_state(cooperation_game, 1000, 10,
+    mean_combined_sum_reward, agent_stats = play_ttp_s_play_only_rep_rep_in_play_state(cooperation_game, 10, 1,
                                                                                        population)
     print("Combined Mean Sum Reward", mean_combined_sum_reward)
     end = time.perf_counter()

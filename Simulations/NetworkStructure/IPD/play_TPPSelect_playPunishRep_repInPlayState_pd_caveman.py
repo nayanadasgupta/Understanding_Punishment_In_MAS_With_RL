@@ -1,4 +1,5 @@
 import json
+import os
 import time
 from typing import List, Any
 import networkx as nx
@@ -157,8 +158,7 @@ def play_tpp_select_play_punish_rep_rep_in_play_state_pd_caveman(cooperation_dil
         combined_sum_rewards_per_ep.append(combined_sum_reward)
     mean_combined_sum_reward = np.mean(combined_sum_rewards_per_ep)
     if logging:
-        with open("Simulations/NetworkStructure/IPD/Logs/play_tpp_select_play_punish_rep_rep_in_play_state_pd_caveman.json", 'w+',
-                  encoding='utf-8') as f:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Logs', 'play_tpp_select_play_punish_rep_rep_in_play_state_pd_caveman.json'), 'w+', encoding='utf-8') as f:
             json.dump(agent_stats, f, ensure_ascii=False, indent=4)
 
     return mean_combined_sum_reward, agent_stats
