@@ -13,6 +13,19 @@ export PYTHONPATH="$PWD:$PYTHONPATH"
 ```
 Every Simulation folder e.g. `Simulations/DP_S/Centipede` should contain a `Logs` and a `Results` folder before running the simulation.
 
+e.g.
+
+```bash
+├── Simulations
+│   ├── DP
+│   │   ├── Centipede
+│   │   │   ├── Logs
+│   │   │   ├── Results
+│   │   │   ├── MultipleRunner_DPOnly_punishOnlyRep_repInPlayState_centipede.py
+│   │   │   └── play_DPOnly_punishOnlyRep_repInPlayState_centipede.py
+
+
+```
 ## Simulations
 
 Run simulations from the root folder as so:
