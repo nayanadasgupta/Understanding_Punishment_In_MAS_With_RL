@@ -1,5 +1,4 @@
-# Reputation impacted by punishing behaviour only.
-# Each agent has their individual reputation - modelling personal feelings that may be against societal good
+# Reputation impacted by punishing behaviour only. Play actions also depend on reputation (play state).
 
 import os
 
@@ -12,7 +11,7 @@ import numpy as np
 
 from Agents.PunishSelectAgent import PunishSelectAgent
 from Mechanisms.PartnerSelection import select_ind_rep_partners
-from Mechanisms.Punishment import select_punishers, perform_punishment
+from Mechanisms.Punishment import perform_punishment
 from Mechanisms.Reputation import societal_reputation_update, avenger_reputation, persecutor_reputation
 from CentipedeGame.Centipede import choose_centipede_play_actions
 
@@ -25,10 +24,9 @@ societal_just_punish_reputation = 2
 societal_unjust_punish_reputation = -3
 societal_no_punish_reputation = 0
 
-
-def play_ttp_s_play_ind_rep_rep_in_play_state(num_eps: int, max_num_rounds: int,
-                                                      population: List[PunishSelectAgent],
-                                                      logging: bool = True):
+def play_dp_s_play_ind_rep_rep_in_play_state_centipede(num_eps: int, max_num_rounds: int,
+                                                               population: List[PunishSelectAgent],
+                                                               logging: bool = True):
     punishment_dict = {0: "NP", 1: "P"}
     play_dict = {0: "C", 1: "D"}
     agent_reputations: List[List[int]] = [[0 for _ in population] for _ in population]
@@ -81,8 +79,6 @@ def play_ttp_s_play_ind_rep_rep_in_play_state(num_eps: int, max_num_rounds: int,
             cur_agent_turn = 0
             stop_activated = False
             for round_index in range(max_num_rounds):
-                punisher_1_idx, punisher_1, punisher_2_idx, punisher_2 = select_punishers(population,
-                                                                                          {agent_1_idx, agent_2_idx})
                 if round_index == max_num_rounds - 1:
                     is_terminal_round = 1
                 if cur_agent_turn == 0:
@@ -95,25 +91,24 @@ def play_ttp_s_play_ind_rep_rep_in_play_state(num_eps: int, max_num_rounds: int,
 
                     punish_state_1 = [play_action_idx_1, agent_prev_play_actions[agent_2_idx]]
 
-                    punish_action_idx_1 = punisher_1.punish_model.select_action(punish_state_1)
+                    punish_action_idx_1 = agent_2.punish_model.select_action(punish_state_1)
                     punish_reward_1, running_reward_1, agent_stats = perform_punishment(punish_action_idx_1,
                                                                                         play_action_idx_1,
-                                                                                        punisher_1_idx,
+                                                                                        agent_2_idx,
                                                                                         running_reward_1,
                                                                                         agent_reputations, agent_stats,
                                                                                         logging, episode)
 
                     if punishment_dict[punish_action_idx_1] == "P":
                         if play_dict[play_action_idx_1] == "C":
-                            agent_reputations = societal_reputation_update(agent_reputations, punisher_1_idx, societal_unjust_punish_reputation)
-                            agent_reputations[agent_1_idx][punisher_1_idx] += persecutor_reputation
+                            agent_reputations = societal_reputation_update(agent_reputations, agent_2_idx, societal_unjust_punish_reputation)
+                            agent_reputations[agent_1_idx][agent_2_idx] += persecutor_reputation
                         else:
-                            agent_reputations = societal_reputation_update(agent_reputations, punisher_1_idx, societal_just_punish_reputation)
-                            agent_reputations[agent_1_idx][punisher_1_idx] += persecutor_reputation
-                            agent_reputations[agent_2_idx][punisher_1_idx] += avenger_reputation
+                            agent_reputations = societal_reputation_update(agent_reputations, agent_2_idx, societal_just_punish_reputation)
+                            agent_reputations[agent_1_idx][agent_2_idx] += persecutor_reputation
+                            agent_reputations[agent_2_idx][agent_2_idx] += avenger_reputation
                     else:
-                        agent_reputations = societal_reputation_update(agent_reputations, punisher_1_idx, societal_no_punish_reputation)
-
+                        agent_reputations = societal_reputation_update(agent_reputations, agent_2_idx, societal_no_punish_reputation)
 
                     combined_punishers_reward += punish_reward_1
 
@@ -128,17 +123,17 @@ def play_ttp_s_play_ind_rep_rep_in_play_state(num_eps: int, max_num_rounds: int,
                     new_punish_state_1 = punish_state_1
                     punish_exp_1 = (punish_state_1, punish_action_idx_1, punish_reward_1, new_punish_state_1,
                                     is_terminal_round)
-                    punisher_1.punish_model.replay_buffer.store(*punish_exp_1)
-                    punisher_1.punish_model.optimise_model()
+                    agent_2.punish_model.replay_buffer.store(*punish_exp_1)
+                    agent_2.punish_model.optimise_model()
 
                     if logging:
                         agent_stats[agent_1_idx]["agent_turn"][episode].append(cur_agent_turn)
                         agent_stats[agent_1_idx]["play_history"][episode].append(play_action_idx_1)
-                        agent_stats[punisher_1_idx]["punish_history"][episode].append(punish_action_idx_1)
+                        agent_stats[agent_2_idx]["punish_history"][episode].append(punish_action_idx_1)
                         agent_stats[agent_1_idx]["reputation"][episode].append(agent_reputations[agent_1_idx])
-                        agent_stats[punisher_1_idx]["reputation"][episode].append(agent_reputations[punisher_1_idx])
+                        agent_stats[agent_2_idx]["reputation"][episode].append(agent_reputations[agent_2_idx])
                         agent_stats[agent_1_idx]["rewards"][episode].append(running_reward_1)
-                        agent_stats[punisher_1_idx]["rewards"][episode].append(punish_reward_1)
+                        agent_stats[agent_2_idx]["rewards"][episode].append(punish_reward_1)
 
                 if stop_activated:
                     break
@@ -153,25 +148,25 @@ def play_ttp_s_play_ind_rep_rep_in_play_state(num_eps: int, max_num_rounds: int,
                     agent_prev_play_actions[agent_2_idx] = play_action_idx_2
 
                     punish_state_2 = [play_action_idx_2, agent_prev_play_actions[agent_1_idx]]
-                    punish_action_idx_2 = punisher_2.punish_model.select_action(punish_state_2)
+                    punish_action_idx_2 = agent_1.punish_model.select_action(punish_state_2)
 
                     punish_reward_2, running_reward_2, agent_stats = perform_punishment(punish_action_idx_2,
                                                                                         play_action_idx_2,
-                                                                                        punisher_2_idx,
+                                                                                        agent_1_idx,
                                                                                         running_reward_2,
                                                                                         agent_reputations, agent_stats,
                                                                                         logging, episode)
 
                     if punishment_dict[punish_action_idx_2] == "P":
                         if play_dict[play_action_idx_2] == "C":
-                            agent_reputations = societal_reputation_update(agent_reputations, punisher_2_idx, societal_unjust_punish_reputation)
-                            agent_reputations[agent_2_idx][punisher_2_idx] += persecutor_reputation
+                            agent_reputations = societal_reputation_update(agent_reputations, agent_1_idx, societal_unjust_punish_reputation)
+                            agent_reputations[agent_2_idx][agent_1_idx] += persecutor_reputation
                         else:
-                            agent_reputations = societal_reputation_update(agent_reputations, punisher_2_idx, societal_just_punish_reputation)
-                            agent_reputations[agent_2_idx][punisher_2_idx] += persecutor_reputation
-                            agent_reputations[agent_1_idx][punisher_2_idx] += avenger_reputation
+                            agent_reputations = societal_reputation_update(agent_reputations, agent_1_idx, societal_just_punish_reputation)
+                            agent_reputations[agent_2_idx][agent_1_idx] += persecutor_reputation
+                            agent_reputations[agent_1_idx][agent_1_idx] += avenger_reputation
                     else:
-                        agent_reputations = societal_reputation_update(agent_reputations, punisher_2_idx, societal_no_punish_reputation)
+                        agent_reputations = societal_reputation_update(agent_reputations, agent_1_idx, societal_no_punish_reputation)
 
                     combined_punishers_reward += punish_reward_2
 
@@ -186,17 +181,17 @@ def play_ttp_s_play_ind_rep_rep_in_play_state(num_eps: int, max_num_rounds: int,
                     new_punish_state_2 = punish_state_2
                     punish_exp_2 = (punish_state_2, punish_action_idx_2, punish_reward_2, new_punish_state_2,
                                     is_terminal_round)
-                    punisher_2.punish_model.replay_buffer.store(*punish_exp_2)
-                    punisher_2.punish_model.optimise_model()
+                    agent_1.punish_model.replay_buffer.store(*punish_exp_2)
+                    agent_1.punish_model.optimise_model()
 
                     if logging:
                         agent_stats[agent_2_idx]["agent_turn"][episode].append(cur_agent_turn)
                         agent_stats[agent_2_idx]["play_history"][episode].append(play_action_idx_2)
-                        agent_stats[punisher_2_idx]["punish_history"][episode].append(punish_action_idx_2)
+                        agent_stats[agent_1_idx]["punish_history"][episode].append(punish_action_idx_2)
                         agent_stats[agent_2_idx]["reputation"][episode].append(agent_reputations[agent_2_idx])
-                        agent_stats[punisher_2_idx]["reputation"][episode].append(agent_reputations[punisher_2_idx])
+                        agent_stats[agent_1_idx]["reputation"][episode].append(agent_reputations[agent_1_idx])
                         agent_stats[agent_2_idx]["rewards"][episode].append(running_reward_2)
-                        agent_stats[punisher_2_idx]["rewards"][episode].append(punish_reward_2)
+                        agent_stats[agent_1_idx]["rewards"][episode].append(punish_reward_2)
 
                     if stop_activated:
                         break
@@ -214,7 +209,7 @@ def play_ttp_s_play_ind_rep_rep_in_play_state(num_eps: int, max_num_rounds: int,
 
     if logging:
         with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Logs',
-                               'play_ttp_s_play_ind_rep_rep_in_play_state.json'), 'w+', encoding='utf-8') as f:
+                               'play_dp_s_play_ind_rep_rep_in_play_state_centipede.json'), 'w+', encoding='utf-8') as f:
             json.dump(agent_stats, f, ensure_ascii=False, indent=4)
     return mean_combined_sum_reward, agent_stats
 
@@ -264,7 +259,7 @@ if __name__ == "__main__":
                                     punish_stage_model_parameters) for _ in range(NUM_AGENTS)]
 
     start = time.perf_counter()
-    mean_combined_sum_reward, agent_stats = play_ttp_s_play_ind_rep_rep_in_play_state(10, 2, population)
+    mean_combined_sum_reward, agent_stats = play_dp_s_play_ind_rep_rep_in_play_state_centipede(10, 2, population)
     print("Combined Mean Sum Reward", mean_combined_sum_reward)
     end = time.perf_counter()
 

@@ -131,7 +131,7 @@ def play_dp_s_ind_rep_rep_in_no_state(cooperation_dilemma: MatrixGame, num_eps: 
                     else:
                         agent_reputations = societal_reputation_update(agent_reputations, punisher_2_idx, societal_just_punish_reputation)
                         agent_reputations[agent_2_idx][punisher_2_idx] += persecutor_reputation
-                        agent_reputations[agent_1_idx][punisher_1_idx] += avenger_reputation
+                        agent_reputations[agent_1_idx][punisher_2_idx] += avenger_reputation
                 else:
                     agent_reputations = societal_reputation_update(agent_reputations, punisher_2_idx, societal_no_punish_reputation)
 
