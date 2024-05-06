@@ -150,7 +150,7 @@ def play_costly_punish_dp_s_play_punish_rep_rep_in_no_state(cooperation_dilemma:
         combined_sum_rewards_per_ep.append(combined_sum_reward)
     mean_combined_sum_reward = np.mean(combined_sum_rewards_per_ep)
     if logging:
-        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Logs', 'play_dp_s_play_punish_rep_rep_in_no_state.json'), 'w+', encoding='utf-8') as f:
+        with open(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Logs', 'play_costly_punish_dp_s_play_punish_rep_rep_in_no_state.json'), 'w+', encoding='utf-8') as f:
             json.dump(agent_stats, f, ensure_ascii=False, indent=4)
     return mean_combined_sum_reward, agent_stats
 
