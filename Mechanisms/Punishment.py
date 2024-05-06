@@ -55,3 +55,32 @@ def perform_punishment(punish_action_idx, victim_action_idx, punisher_idx, curre
                 else:
                     agent_stats[punisher_idx]["punish_justly"][episode] += 1
     return punish_reward, current_victim_reward, agent_stats
+
+
+def perform_costly_punishment(punish_action_idx, victim_action_idx, punisher_idx, current_victim_reward, agent_reputations,
+                       agent_stats, logging, episode, tpp_in_tppdp=False, direct_in_tppdp=False):
+    punishment_dict = {0: "NP", 1: "P"}
+    play_dict = {0: "C", 1: "D"}
+    punish_reward = 0
+    just_punish_reward = -3
+    if punishment_dict[punish_action_idx] == "P":
+        current_victim_reward += punishment_victim_penalty
+        if play_dict[victim_action_idx] == "C":
+            punish_reward += unjust_punish_reward
+            if logging:
+                if tpp_in_tppdp:
+                    agent_stats[punisher_idx]["tpp_punish_unjustly"][episode] += 1
+                elif direct_in_tppdp:
+                    agent_stats[punisher_idx]["direct_punish_unjustly"][episode] += 1
+                else:
+                    agent_stats[punisher_idx]["punish_unjustly"][episode] += 1
+        else:
+            punish_reward += just_punish_reward
+            if logging:
+                if tpp_in_tppdp:
+                    agent_stats[punisher_idx]["tpp_punish_justly"][episode] += 1
+                elif direct_in_tppdp:
+                    agent_stats[punisher_idx]["direct_punish_justly"][episode] += 1
+                else:
+                    agent_stats[punisher_idx]["punish_justly"][episode] += 1
+    return punish_reward, current_victim_reward, agent_stats
