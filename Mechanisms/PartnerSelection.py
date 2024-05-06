@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Union
 from Agents.PunishSelectAgent import PunishSelectAgent
 from Agents.PunishNoSelectAgent import PunishNoSelectAgent
+from Agents.ReputationOnlyAgent import ReputationOnlyAgent
 import networkx as nx
 import random
 
@@ -16,12 +17,11 @@ def select_ind_rep_partners(agent_population: List[PunishSelectAgent], agent_rep
     return pairings
 
 
-def rand_select_partners(population: List[PunishNoSelectAgent], play_agent_idx: int):
+def rand_select_partners(population: Union[List[PunishNoSelectAgent], List[ReputationOnlyAgent]], play_agent_idx: int):
     possible_partners = [(partner_idx, partner) for partner_idx, partner in enumerate(population)
                          if partner_idx != play_agent_idx]
     possible_partner_idx, possible_partner = random.choice(possible_partners)
     return possible_partner_idx, possible_partner
-
 
 # No limit to the number of times an agent can be selected. Agent cannot select itself.
 def select_partners(agent_population: List[PunishSelectAgent], agent_reputations: List[int]):

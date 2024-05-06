@@ -1,6 +1,6 @@
 # Understanding Punishment In Multi-Agent Systems Using Reinforcement Learning
 
-Code to replicate results of Final Year Project for MEng Computer Science.
+Code to replicate results of ["Investigating the Impact of Direct Punishment on the Emergence of Cooperation in Multi-Agent Reinforcement Learning Systems"](https://arxiv.org/abs/2301.08278)
 
 ## Set Up
 
